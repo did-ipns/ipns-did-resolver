@@ -1,0 +1,43 @@
+{
+  "name": "ipns-did-resolver",
+  "version": "0.1.0",
+  "description": "Resolve DID documents using the IPNS method",
+  "types": "dist/index.d.ts",
+  "source": "src/index.ts",
+  "main": "dist/index.js",
+  "unpkg": "dist/index.umd.js",
+  "module": "dist/index.mjs",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "build": "microbundle --compress=false"
+  },
+  "keywords": [
+    "DID",
+    "IPSP",
+    "IPFS",
+    "DID resolver"
+  ],
+  "author": "Upkeep",
+  "license": "ISC",
+  "dependencies": {
+    "@ipld/dag-cbor": "^7.0.2",
+    "@ipld/dag-json": "^8.0.10",
+    "@ipld/dag-pb": "^2.1.17",
+    "did-doc": "file:../did-doc",
+    "did-resolver": "^4.0.0",
+    "ipfs-core-types": "^0.11.1",
+    "ipfs-uniform-resolve": "^1.0.0",
+    "multiformat-multicodec": "^1.0.0",
+    "multiformats": "^9.7.1",
+    "uint8arrays": "^3.1.0"
+  },
+  "devDependencies": {
+    "microbundle": "^0.15.1",
+    "typescript": "^4.7.4"
+  }
+}

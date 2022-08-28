@@ -1,6 +1,6 @@
 {
   "name": "ipns-did-resolver",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Resolve DID documents using the IPNS method",
   "types": "dist/index.d.ts",
   "source": "src/index.ts",

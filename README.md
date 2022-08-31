@@ -1,6 +1,6 @@
 # ipns-did-resolver
 
-**NOTE:** The IPNS-DID spec is unstable.
+**NOTE:** The [DID-IPNS spec](https://misterupkeep.github.io/did-ipns-spec/) is unstable.
 
 A resolver library for the IPNS method, to be used with the
 [`did-resolver`](https://www.npmjs.com/package/did-resolver) library.

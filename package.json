@@ -2,10 +2,8 @@
   "name": "ipns-did-resolver",
   "version": "0.1.1",
   "description": "Resolve DID documents using the IPNS method",
-  "types": "dist/index.d.ts",
   "source": "src/index.ts",
   "main": "dist/index.js",
-  "unpkg": "dist/index.umd.js",
   "module": "dist/index.mjs",
   "exports": {
     ".": {
@@ -14,7 +12,7 @@
     }
   },
   "scripts": {
-    "build": "microbundle --compress=false"
+    "build": "tsup src/index.ts"
   },
   "keywords": [
     "DID",
@@ -25,19 +23,15 @@
   "author": "Upkeep",
   "license": "ISC",
   "dependencies": {
-    "@ipld/dag-cbor": "^7.0.2",
-    "@ipld/dag-json": "^8.0.10",
-    "@ipld/dag-pb": "^2.1.17",
-    "did-doc": "^1.0.0",
-    "did-resolver": "^4.0.0",
-    "ipfs-core-types": "^0.11.1",
-    "ipfs-uniform-resolve": "^1.0.0",
-    "multiformat-multicodec": "^1.0.0",
-    "multiformats": "^9.7.1",
-    "uint8arrays": "^3.1.0"
+    "@helia/ipns": "7.2.0",
+    "@helia/unixfs": "3.0.3",
+    "did-doc": "1.0.0",
+    "did-resolver": "4.1.0",
+    "helia": "4.1.0"
   },
   "devDependencies": {
-    "microbundle": "^0.15.1",
-    "typescript": "^4.7.4"
+    "prettier": "3.2.5",
+    "tsup": "8.0.2",
+    "typescript": "5.4.3"
   }
 }

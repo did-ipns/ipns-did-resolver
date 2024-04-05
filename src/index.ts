@@ -7,6 +7,7 @@ import type { HeliaLibp2p } from "helia";
 import { unixfs } from "@helia/unixfs";
 import { ipns } from "@helia/ipns";
 import { peerIdFromString } from "@libp2p/peer-id";
+import { isFQDN } from "validator";
 
 import { err } from "./utils";
 
@@ -31,8 +32,12 @@ export function getResolver(helia: HeliaLibp2p) {
       if (queryParams.has("versionId")) {
         cid = CID.parse(queryParams.get("versionId"));
       } else {
-        const peer = peerIdFromString(parsed.id);
-        cid = (await heliaName.resolve(peer)).cid;
+        if (isFQDN(parsed.id)) {
+          cid = (await heliaName.resolveDNSLink(parsed.id)).cid;
+        } else {
+          const peer = peerIdFromString(parsed.id);
+          cid = (await heliaName.resolve(peer)).cid;
+        }
       }
       let resultBuffers = [];
       for await (const buf of heliaFs.cat(cid, { path: parsed.path })) {

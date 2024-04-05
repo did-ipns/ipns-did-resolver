@@ -27,9 +27,11 @@
     "@helia/unixfs": "3.0.3",
     "did-doc": "1.0.0",
     "did-resolver": "4.1.0",
-    "helia": "4.1.0"
+    "helia": "4.1.0",
+    "validator": "13.11.0"
   },
   "devDependencies": {
+    "@types/validator": "^13.11.9",
     "prettier": "3.2.5",
     "tsup": "8.0.2",
     "typescript": "5.4.3"

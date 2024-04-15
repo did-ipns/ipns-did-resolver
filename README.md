@@ -6,7 +6,9 @@ A resolver library for the IPNS method, to be used with the
 [`did-resolver`](https://www.npmjs.com/package/did-resolver) library.
 
 IPNS method resolution works with both IPNS (Peer ID hash) CIDs and DNSLink
-domains. Paths will be resolved as UnixFS blocks.
+domains. Paths will be resolved as UnixFS blocks.  
+
+Note: The default DID path is `.well-known/did.json` which is similar to `did:web`.
 
 Documents that resolve but have an ID that doesn't match the DID used to resolve
 it will throw an error.

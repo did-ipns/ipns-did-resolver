@@ -59,7 +59,7 @@ export function getResolver(helia: HeliaLibp2p) {
       return err("invalidDoc");
     }
 
-    if (didDocument.id !== parsed.id) {
+    if (didDocument.id !== `did:ipns:${parsed.id}`) {
       return err("invalidDoc", "DID in document doesn't match");
     }
 

@@ -4,9 +4,7 @@ import type {
   DIDResolutionResult,
 } from "did-resolver";
 import type { CID as CIDType } from "multiformats";
-
 import { DIDDocument } from "did-doc";
-
 import { CID } from "multiformats";
 import type { HeliaLibp2p } from "helia";
 import { unixfs } from "@helia/unixfs";
@@ -14,7 +12,7 @@ import { ipns } from "@helia/ipns";
 import { peerIdFromString } from "@libp2p/peer-id";
 import isFQDN from "validator/lib/isFQDN.js";
 import { dns, RecordType } from "@multiformats/dns";
-
+import { parse } from "did-resolver";
 import { err } from "./utils";
 
 const DNSLINK_PREFIX = "dnslink=/ipns/";
@@ -27,6 +25,7 @@ export function getResolver(helia: HeliaLibp2p) {
   async function resolve(
     did: string,
     parsed: ParsedDID,
+    depth = 0,
   ): Promise<DIDResolutionResult> {
     let cid: CIDType, didDocument: DIDDocumentType, finalCid: CIDType;
     let didId = parsed.id;
@@ -78,6 +77,11 @@ export function getResolver(helia: HeliaLibp2p) {
 
     if (didDocument.id !== `did:ipns:${didId}`) {
       return err("invalidDoc", "DID in document doesn't match");
+    }
+
+    // Forward recursively until DID is resolved with a maximum depth of 10
+    if (typeof didDocument.forward === "string") {
+      return resolve(didDocument.forward, parse(didDocument.forward), depth++);
     }
 
     return {

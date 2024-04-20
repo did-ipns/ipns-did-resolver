@@ -17,7 +17,7 @@ it will throw an error.
 
 ```ts
 import { Resolver } from "did-resolver";
-import { getResolver } from "ipns-did-resolver";
+import { getResolver } from "@did-ipns/resolver";
 
 import { createHeliaHTTP } from '@helia/http'
 

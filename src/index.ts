@@ -1,68 +1,88 @@
 import type {
   ParsedDID,
-  Resolver,
-  DIDResolutionOptions,
+  DIDDocument as DIDDocumentType,
   DIDResolutionResult,
-  DIDDocument,
 } from "did-resolver";
-
-import { DIDDocument as IPNSDoc } from "did-doc";
-
-import type { API as BlockAPI } from "ipfs-core-types/block";
-import type { API as NameAPI } from "ipfs-core-types/name";
-
-import type { Multidecoder } from "multiformat-multicodec";
-import type { BlockDecoder } from "multiformats/codecs/interface";
-import type { Hasher } from "multiformats/hashes/hasher";
-
-import Resolve from "ipfs-uniform-resolve";
-
+import type { CID as CIDType } from "multiformats";
+import { DIDDocument } from "did-doc";
+import { CID } from "multiformats";
+import type { HeliaLibp2p } from "helia";
+import { unixfs } from "@helia/unixfs";
+import { ipns } from "@helia/ipns";
+import { peerIdFromString } from "@libp2p/peer-id";
+import isFQDN from "validator/lib/isFQDN.js";
+import { dns, RecordType } from "@multiformats/dns";
+import { parse } from "did-resolver";
 import { err } from "./utils";
 
-export function getResolver(
-  blockApi: BlockAPI,
-  nameApi: NameAPI,
-  multidecoder?: Multidecoder<DIDDocument> & {
-    decoders: [BlockDecoder<any, any>];
-    hashers: [Hasher<any, any>];
-  }
-) {
-  const resolver = Resolve(blockApi, nameApi, multidecoder);
+const DNSLINK_PREFIX = "dnslink=/ipns/";
+
+export function getResolver(helia: HeliaLibp2p) {
+  const heliaFs = unixfs(helia),
+    heliaName = ipns(helia),
+    resolver = dns();
 
   async function resolve(
     did: string,
     parsed: ParsedDID,
-    didResolver: Resolver,
-    options: DIDResolutionOptions
+    depth = 0,
   ): Promise<DIDResolutionResult> {
-    let cid;
+    let cid: CIDType, didDocument: DIDDocumentType, finalCid: CIDType;
+    let didId = parsed.id;
     try {
-      cid = await resolver.resolveIpns(parsed.id);
+      const queryParams = new Map();
+      const didPath = parsed.path || ".well-known/did.json";
+      if (typeof parsed.query !== "undefined") {
+        const splitQueries = parsed.query.split("&");
+        for (const splitQuery of splitQueries) {
+          const queryParam = splitQuery.split("=");
+          queryParams.set(queryParam[0], queryParam[1]);
+        }
+      }
+      if (queryParams.has("versionId")) {
+        cid = CID.parse(queryParams.get("versionId"));
+      } else {
+        if (isFQDN(parsed.id)) {
+          // If DNS has IPNS entry stored then use the IPNS CID as the DID ID instead.
+          const answer = (
+            await resolver.query(`_dnslink.${parsed.id}`, {
+              types: [RecordType.TXT],
+            })
+          ).Answer[0];
+          if (
+            answer.data.startsWith(DNSLINK_PREFIX) &&
+            answer.data.split("/").length === 3
+          ) {
+            didId = answer.data.substring(DNSLINK_PREFIX.length);
+          }
+          cid = (await heliaName.resolveDNSLink(parsed.id)).cid;
+        } else {
+          const peer = peerIdFromString(parsed.id);
+          cid = (await heliaName.resolve(peer)).cid;
+        }
+      }
+      let resultBuffers = [];
+      for await (const buf of heliaFs.cat(cid, { path: didPath })) {
+        resultBuffers.push(buf);
+      }
+      didDocument = JSON.parse(Buffer.concat(resultBuffers).toString());
+      finalCid = (await heliaFs.stat(cid, { path: didPath })).cid;
     } catch (e) {
       return err("notFound", e);
     }
 
-    let result, finalCid;
-    try {
-      const r = await resolver.resolve(cid, parsed.path, { followIpld: false });
-      result = r.value;
-      finalCid = r.cid;
-    } catch (e) {
-      return err("notFound", e);
-    }
-
-    if (!IPNSDoc.isDoc(result)) {
+    if (!DIDDocument.isDoc(didDocument)) {
       return err("invalidDoc");
     }
 
-    if (result.id !== `did:ipns:${parsed.id}`) {
+    if (didDocument.id !== `did:ipns:${didId}`) {
       return err("invalidDoc", "DID in document doesn't match");
     }
 
-    const didDocument = {
-      id: parsed.id,
-      ...result,
-    };
+    // Forward recursively until DID is resolved with a maximum depth of 10
+    if (typeof didDocument.forward === "string") {
+      return resolve(didDocument.forward, parse(didDocument.forward), depth++);
+    }
 
     return {
       didDocument,
